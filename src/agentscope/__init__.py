@@ -22,7 +22,7 @@ def init(
     save_code: bool = False,
     save_api_invoke: bool = False,
     use_monitor: bool = True,
-    logger_level: str = "INFO",
+    logger_level: str = "DEBUG",
     runtime_param: Optional[dict] = None,
 ) -> None:
     """Initialize the AgentScope framework.
@@ -52,8 +52,9 @@ def init(
             Defaults to ``True``.
         logger_level (str): Logging verbosity level. One of
             ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``.
-            Defaults to ``"INFO"`` so progress messages are visible
-            without needing to explicitly set the level each time.
+            Defaults to ``"DEBUG"`` for easier debugging during
+            local development and experimentation. Switch to
+            ``"INFO"`` for cleaner output in production.
         runtime_param (dict, optional): Additional runtime parameters
             passed through to the underlying runtime manager.
 
@@ -75,5 +76,4 @@ def init(
                         "api_key": "YOUR_API_KEY",
                     }
                 ],
-                project="my_experiment",
-                sav
+  
