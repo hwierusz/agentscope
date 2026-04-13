@@ -22,7 +22,7 @@ def init(
     save_code: bool = False,
     save_api_invoke: bool = False,
     use_monitor: bool = True,
-    logger_level: str = "WARNING",
+    logger_level: str = "INFO",
     runtime_param: Optional[dict] = None,
 ) -> None:
     """Initialize the AgentScope framework.
@@ -52,7 +52,8 @@ def init(
             Defaults to ``True``.
         logger_level (str): Logging verbosity level. One of
             ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``.
-            Defaults to ``"WARNING"`` to reduce noise during development.
+            Defaults to ``"INFO"`` so progress messages are visible
+            without needing to explicitly set the level each time.
         runtime_param (dict, optional): Additional runtime parameters
             passed through to the underlying runtime manager.
 
@@ -75,10 +76,4 @@ def init(
                     }
                 ],
                 project="my_experiment",
-                save_dir="./output",
-            )
-    """
-    # Import here to avoid circular imports at module load time
-    from agentscope.manager import ASManager  # noqa: PLC0415
-
-    ASM
+                sav
