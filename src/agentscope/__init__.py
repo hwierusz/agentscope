@@ -19,10 +19,10 @@ def init(
     run_id: Optional[str] = None,
     save_dir: str = "./runs",
     save_log: bool = True,
-    save_code: bool = True,
+    save_code: bool = False,
     save_api_invoke: bool = False,
     use_monitor: bool = True,
-    logger_level: str = "INFO",
+    logger_level: str = "WARNING",
     runtime_param: Optional[dict] = None,
 ) -> None:
     """Initialize the AgentScope framework.
@@ -43,14 +43,16 @@ def init(
         save_log (bool): Whether to persist log output to disk.
             Defaults to ``True``.
         save_code (bool): Whether to save a snapshot of the calling
-            script alongside run artifacts. Defaults to ``True``.
+            script alongside run artifacts. Defaults to ``False``.
+            (Personal note: changed default to False since I rarely
+            need code snapshots during local experimentation.)
         save_api_invoke (bool): Whether to record all API invocation
             details for debugging. Defaults to ``False``.
         use_monitor (bool): Whether to enable the token/cost monitor.
             Defaults to ``True``.
         logger_level (str): Logging verbosity level. One of
             ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``.
-            Defaults to ``"INFO"``.
+            Defaults to ``"WARNING"`` to reduce noise during development.
         runtime_param (dict, optional): Additional runtime parameters
             passed through to the underlying runtime manager.
 
@@ -79,21 +81,4 @@ def init(
     # Import here to avoid circular imports at module load time
     from agentscope.manager import ASManager  # noqa: PLC0415
 
-    ASManager.get_instance().initialize(
-        model_configs=model_configs or [],
-        project=project,
-        run_id=run_id,
-        save_dir=save_dir,
-        save_log=save_log,
-        save_code=save_code,
-        save_api_invoke=save_api_invoke,
-        use_monitor=use_monitor,
-        logger_level=logger_level,
-        runtime_param=runtime_param or {},
-    )
-
-
-__all__ = [
-    "__version__",
-    "init",
-]
+    ASM
