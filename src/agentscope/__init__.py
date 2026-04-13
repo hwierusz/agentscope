@@ -22,7 +22,7 @@ def init(
     save_code: bool = False,
     save_api_invoke: bool = False,
     use_monitor: bool = True,
-    logger_level: str = "DEBUG",
+    logger_level: str = "INFO",
     runtime_param: Optional[dict] = None,
 ) -> None:
     """Initialize the AgentScope framework.
@@ -52,9 +52,8 @@ def init(
             Defaults to ``True``.
         logger_level (str): Logging verbosity level. One of
             ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``.
-            Defaults to ``"DEBUG"`` for easier debugging during
-            local development and experimentation. Switch to
-            ``"INFO"`` for cleaner output in production.
+            Defaults to ``"INFO"`` for cleaner output. Switch to
+            ``"DEBUG"`` when actively troubleshooting issues.
         runtime_param (dict, optional): Additional runtime parameters
             passed through to the underlying runtime manager.
 
@@ -73,7 +72,4 @@ def init(
                         "model_type": "openai_chat",
                         "config_name": "gpt-4o",
                         "model_name": "gpt-4o",
-                        "api_key": "YOUR_API_KEY",
-                    }
-                ],
-  
+                        "api_key": "YOUR_API_K
