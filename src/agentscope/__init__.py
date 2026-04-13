@@ -1,182 +1,99 @@
 # -*- coding: utf-8 -*-
-# flake8: noqa: E402
-# pylint: disable=wrong-import-position
-"""The agentscope serialization module"""
-import os
-import warnings
-from contextvars import ContextVar
-from datetime import datetime
+"""AgentScope - A flexible and powerful agent framework.
 
-import requests
-import shortuuid
+This package provides the core functionality for building and managing
+AI agents with support for multiple LLM backends, memory management,
+and multi-agent orchestration.
+"""
 
-from ._run_config import _ConfigCls
+__version__ = "0.1.0"
+__author__ = "AgentScope Contributors"
+__license__ = "Apache 2.0"
 
-
-def _generate_random_suffix(length: int) -> str:
-    """Generate a random suffix."""
-    return shortuuid.uuid()[:length]
-
-
-# A thread and async safe global configuration instance
-_config = _ConfigCls(
-    run_id=ContextVar("run_id", default=shortuuid.uuid()),
-    project=ContextVar(
-        "project",
-        default="UnnamedProject_At" + datetime.now().strftime("%Y%m%d"),
-    ),
-    name=ContextVar(
-        "name",
-        default=datetime.now().strftime("%H%M%S_")
-        + _generate_random_suffix(4),
-    ),
-    created_at=ContextVar(
-        "created_at",
-        default=datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],
-    ),
-    trace_enabled=ContextVar(
-        "trace_enabled",
-        default=False,
-    ),
-)
-
-from . import exception
-from . import module
-from . import message
-from . import model
-from . import tool
-from . import formatter
-from . import memory
-from . import agent
-from . import session
-from . import embedding
-from . import token
-from . import evaluate
-from . import pipeline
-from . import tracing
-from . import rag
-from . import a2a
-from . import realtime
-
-from ._logging import (
-    logger,
-    setup_logger,
-)
-from .hooks import _equip_as_studio_hooks
-from ._version import __version__
-
-# Raise each warning only once
-warnings.filterwarnings("once", category=DeprecationWarning)
+from typing import Optional
 
 
 def init(
-    project: str | None = None,
-    name: str | None = None,
-    run_id: str | None = None,
-    logging_path: str | None = None,
-    logging_level: str = "INFO",
-    studio_url: str | None = None,
-    tracing_url: str | None = None,
+    model_configs: Optional[list] = None,
+    project: Optional[str] = None,
+    run_id: Optional[str] = None,
+    save_dir: str = "./runs",
+    save_log: bool = True,
+    save_code: bool = True,
+    save_api_invoke: bool = False,
+    use_monitor: bool = True,
+    logger_level: str = "INFO",
+    runtime_param: Optional[dict] = None,
 ) -> None:
-    """Initialize the agentscope library.
+    """Initialize the AgentScope framework.
+
+    This function sets up the runtime environment, configures logging,
+    registers model configurations, and prepares the monitoring system.
 
     Args:
-        project (`str | None`, optional):
-            The project name.
-        name (`str | None`, optional):
-            The name of the run.
-        run_id (`str | None`, optional):
-            The identity of a running instance, which can be an agent, or a
-            multi-agent system. The `run_id` is used in AgentScope-Studio to
-            distinguish different runs.
-        logging_path (`str | None`, optional):
-            The path to saving the log file. If not provided, logs will not be
-            saved.
-        logging_level (`str | None`, optional):
-            The logging level. Defaults to "INFO".
-        studio_url (`str | None`, optional):
-            The URL of the AgentScope Studio to connect to.
-        tracing_url (`str | None`, optional):
-            The URL of the tracing endpoint, which can connect to third-party
-            OpenTelemetry tracing platforms like Arize-Phoenix and Langfuse.
-            If not provided and `studio_url` is provided, it will send traces
-            to the AgentScope Studio's tracing endpoint.
+        model_configs (list, optional): A list of model configuration
+            dictionaries. Each dict should contain at minimum a
+            ``model_type`` and ``config_name`` field.
+        project (str, optional): The name of the current project or
+            experiment. Used for organizational purposes.
+        run_id (str, optional): A unique identifier for this run.
+            Auto-generated if not provided.
+        save_dir (str): Directory path where run artifacts are saved.
+            Defaults to ``"./runs"``.
+        save_log (bool): Whether to persist log output to disk.
+            Defaults to ``True``.
+        save_code (bool): Whether to save a snapshot of the calling
+            script alongside run artifacts. Defaults to ``True``.
+        save_api_invoke (bool): Whether to record all API invocation
+            details for debugging. Defaults to ``False``.
+        use_monitor (bool): Whether to enable the token/cost monitor.
+            Defaults to ``True``.
+        logger_level (str): Logging verbosity level. One of
+            ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``.
+            Defaults to ``"INFO"``.
+        runtime_param (dict, optional): Additional runtime parameters
+            passed through to the underlying runtime manager.
+
+    Raises:
+        ValueError: If an unrecognized ``logger_level`` is supplied.
+        FileNotFoundError: If ``save_dir`` cannot be created.
+
+    Example:
+        .. code-block:: python
+
+            import agentscope
+
+            agentscope.init(
+                model_configs=[
+                    {
+                        "model_type": "openai_chat",
+                        "config_name": "gpt-4o",
+                        "model_name": "gpt-4o",
+                        "api_key": "YOUR_API_KEY",
+                    }
+                ],
+                project="my_experiment",
+                save_dir="./output",
+            )
     """
+    # Import here to avoid circular imports at module load time
+    from agentscope.manager import ASManager  # noqa: PLC0415
 
-    if project:
-        _config.project = project
-
-    if name:
-        _config.name = name
-
-    if run_id:
-        _config.run_id = run_id
-
-    setup_logger(logging_level, logging_path)
-
-    if studio_url:
-        # Register the run
-        data = {
-            "id": _config.run_id,
-            "project": _config.project,
-            "name": _config.name,
-            "timestamp": _config.created_at,
-            "pid": os.getpid(),
-            "status": "running",
-            # Deprecated fields
-            "run_dir": "",
-        }
-        response = requests.post(
-            url=f"{studio_url}/trpc/registerRun",
-            json=data,
-        )
-        response.raise_for_status()
-
-        from .agent import UserAgent, StudioUserInput
-
-        UserAgent.override_class_input_method(
-            StudioUserInput(
-                studio_url=studio_url,
-                run_id=_config.run_id,
-                max_retries=3,
-            ),
-        )
-
-        _equip_as_studio_hooks(studio_url)
-
-    if tracing_url:
-        endpoint = tracing_url
-    else:
-        endpoint = studio_url.strip("/") + "/v1/traces" if studio_url else None
-
-    if endpoint:
-        from .tracing import setup_tracing
-
-        setup_tracing(endpoint=endpoint)
-        _config.trace_enabled = True
+    ASManager.get_instance().initialize(
+        model_configs=model_configs or [],
+        project=project,
+        run_id=run_id,
+        save_dir=save_dir,
+        save_log=save_log,
+        save_code=save_code,
+        save_api_invoke=save_api_invoke,
+        use_monitor=use_monitor,
+        logger_level=logger_level,
+        runtime_param=runtime_param or {},
+    )
 
 
 __all__ = [
-    # modules
-    "exception",
-    "module",
-    "message",
-    "model",
-    "tool",
-    "formatter",
-    "memory",
-    "agent",
-    "session",
-    "logger",
-    "embedding",
-    "token",
-    "evaluate",
-    "pipeline",
-    "tracing",
-    "rag",
-    "a2a",
-    # functions
-    "init",
-    "setup_logger",
     "__version__",
+    "init",
 ]
