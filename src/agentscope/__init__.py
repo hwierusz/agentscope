@@ -12,12 +12,16 @@ __license__ = "Apache 2.0"
 
 from typing import Optional
 
+# Personal preference: default save_dir to a hidden dot-folder so run
+# artifacts don't clutter the project root during local experimentation.
+_DEFAULT_SAVE_DIR = "./.agentscope_runs"
+
 
 def init(
     model_configs: Optional[list] = None,
     project: Optional[str] = None,
     run_id: Optional[str] = None,
-    save_dir: str = "./runs",
+    save_dir: str = _DEFAULT_SAVE_DIR,
     save_log: bool = True,
     save_code: bool = False,
     save_api_invoke: bool = False,
@@ -39,7 +43,8 @@ def init(
         run_id (str, optional): A unique identifier for this run.
             Auto-generated if not provided.
         save_dir (str): Directory path where run artifacts are saved.
-            Defaults to ``"./runs"``.
+            Defaults to ``"./.agentscope_runs"`` (a hidden folder so
+            run artifacts don't clutter the project root).
         save_log (bool): Whether to persist log output to disk.
             Defaults to ``True``.
         save_code (bool): Whether to save a snapshot of the calling
@@ -73,5 +78,4 @@ def init(
                     {
                         "model_type": "openai_chat",
                         "config_name": "gpt-4o",
-                        "model_name": "gpt-4o",
-                        "api_key": "YOUR_API_K
+                      
