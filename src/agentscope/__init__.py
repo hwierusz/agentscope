@@ -16,6 +16,9 @@ from typing import Optional
 # artifacts don't clutter the project root during local experimentation.
 _DEFAULT_SAVE_DIR = "./.agentscope_runs"
 
+# Valid logger levels for input validation
+_VALID_LOGGER_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+
 
 def init(
     model_configs: Optional[list] = None,
@@ -56,7 +59,8 @@ def init(
         use_monitor (bool): Whether to enable the token/cost monitor.
             Defaults to ``True``.
         logger_level (str): Logging verbosity level. One of
-            ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``.
+            ``"DEBUG"``, ``"INFO"``, ``"WARNING"``, ``"ERROR"``,
+            ``"CRITICAL"``.
             Defaults to ``"INFO"`` for cleaner output. Switch to
             ``"DEBUG"`` when actively troubleshooting issues.
             (Personal note: changed default from DEBUG to INFO since
@@ -67,15 +71,3 @@ def init(
     Raises:
         ValueError: If an unrecognized ``logger_level`` is supplied.
         FileNotFoundError: If ``save_dir`` cannot be created.
-
-    Example:
-        .. code-block:: python
-
-            import agentscope
-
-            agentscope.init(
-                model_configs=[
-                    {
-                        "model_type": "openai_chat",
-                        "config_name": "gpt-4o",
-                      
