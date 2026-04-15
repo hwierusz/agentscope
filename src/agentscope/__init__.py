@@ -69,5 +69,13 @@ def init(
             passed through to the underlying runtime manager.
 
     Raises:
-        ValueError: If an unrecognized ``logger_level`` is supplied.
-        FileNotFoundError: If ``save_dir`` cannot be created.
+        ValueError: If ``logger_level`` is not one of the accepted
+            values in ``_VALID_LOGGER_LEVELS``.
+    """
+    # Validate logger_level early so the error message is clear rather
+    # than surfacing as a cryptic failure deep in the logging setup.
+    if logger_level not in _VALID_LOGGER_LEVELS:
+        raise ValueError(
+            f"Invalid logger_level '{logger_level}'. "
+            f"Must be one of: {', '.join(_VALID_LOGGER_LEVELS)}"
+        )
