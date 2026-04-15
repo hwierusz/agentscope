@@ -73,7 +73,7 @@ def init(
             values in ``_VALID_LOGGER_LEVELS``.
     """
     # Validate logger_level early so the error message is clear rather
-    # than surfacing as a cryptic failure deep inside the logging setup.
+    # than surfacing as a cryptic failure deep in the logging setup.
     if logger_level not in _VALID_LOGGER_LEVELS:
         raise ValueError(
             f"Invalid logger_level '{logger_level}'. "
